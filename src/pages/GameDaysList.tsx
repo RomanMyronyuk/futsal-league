@@ -7,7 +7,6 @@ import {
   Card,
   Button,
   EmptyState,
-  Badge,
   ButtonGroup,
 } from '@/components/UI';
 import styled from 'styled-components';
@@ -29,12 +28,7 @@ const GameDayCard = styled(Card)`
 `;
 
 const GameDayHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: ${({ theme }) => theme.spacing.sm};
-  gap: 8px;
-  flex-wrap: wrap;
 `;
 
 const GameDayTitle = styled.h3`
@@ -80,7 +74,7 @@ const PageHeader = styled.div`
 `;
 
 export const GameDaysList: React.FC = () => {
-  const { gameDays, deleteGameDay, setActiveGameDay } = useApp();
+  const { gameDays, deleteGameDay } = useApp();
   const navigate = useNavigate();
 
   const sortedGameDays = [...gameDays].sort(
@@ -96,11 +90,6 @@ export const GameDaysList: React.FC = () => {
     if (window.confirm('Ви впевнені, що хочете видалити цей ігровий день?')) {
       await deleteGameDay(id);
     }
-  };
-
-  const handleSetActive = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    await setActiveGameDay(id);
   };
 
   return (
@@ -124,7 +113,6 @@ export const GameDaysList: React.FC = () => {
           <GameDayCard key={gameDay.id} onClick={() => handleGameDayClick(gameDay.id)}>
             <GameDayHeader>
               <GameDayTitle>{gameDay.name}</GameDayTitle>
-              {gameDay.isActive && <Badge $color="#4caf50">Активний</Badge>}
             </GameDayHeader>
             <GameDayDate>{new Date(gameDay.date).toLocaleDateString('uk-UA')}</GameDayDate>
             <GameDayStats>
@@ -132,20 +120,6 @@ export const GameDaysList: React.FC = () => {
               <span>Гравців: {gameDay.playerTeamAssignments.length}</span>
             </GameDayStats>
             <ButtonGroup style={{ marginTop: '16px' }}>
-              {!gameDay.isActive && (
-                <Button onClick={e => handleSetActive(e, gameDay.id)}>
-                  Активувати
-                </Button>
-              )}
-              <Button
-                $variant="secondary"
-                onClick={e => {
-                  e.stopPropagation();
-                  navigate(`/game-day/${gameDay.id}/edit`);
-                }}
-              >
-                Редагувати
-              </Button>
               <Button $variant="danger" onClick={e => handleDelete(e, gameDay.id)}>
                 Видалити
               </Button>

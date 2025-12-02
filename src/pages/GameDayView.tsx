@@ -57,6 +57,15 @@ const MatchCard = styled(Card)`
   background: ${({ theme }) => theme.colors.background};
 `;
 
+const MatchNumber = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
 const MatchContent = styled.div`
   display: flex;
   justify-content: space-between;
@@ -686,8 +695,9 @@ export const GameDayView: React.FC = () => {
         {gameDay.matches.length === 0 ? (
           <EmptyState>Ще немає матчів</EmptyState>
         ) : (
-          gameDay.matches.map(match => (
+          gameDay.matches.map((match, index) => (
             <MatchCard key={match.id}>
+              <MatchNumber>Матч #{index + 1}</MatchNumber>
               <MatchContent>
                 <MatchTeams>
                   <TeamBadge $color={getTeamColor(match.team1Id)}>
