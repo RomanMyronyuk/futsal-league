@@ -7,17 +7,18 @@ import {
   Subtitle,
   Card,
   Button,
-  Flex,
   Table,
   Th,
   Td,
   Tr,
   Badge,
   Select,
-  Input,
   Label,
   FormGroup,
   EmptyState,
+  TableWrapper,
+  ButtonGroup,
+  MobileStack,
 } from '@/components/UI';
 import styled from 'styled-components';
 import { Goal, Match } from '@/types';
@@ -31,22 +32,63 @@ const TeamBadge = styled.div<{ $color: string }>`
   color: white;
   border-radius: 4px;
   font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+
+  @media (max-width: 480px) {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
 `;
 
 const ScoreDisplay = styled.div`
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   text-align: center;
+  min-width: 60px;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+    min-width: 50px;
+  }
 `;
 
 const MatchCard = styled(Card)`
   background: ${({ theme }) => theme.colors.background};
 `;
 
+const MatchContent = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 12px;
+  }
+`;
+
+const MatchTeams = styled.div`
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
+`;
+
 const GoalsList = styled.div`
   margin-top: ${({ theme }) => theme.spacing.sm};
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text.secondary};
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
 `;
 
 const GoalInputRow = styled.div`
@@ -57,6 +99,13 @@ const GoalInputRow = styled.div`
   padding: 8px;
   background: white;
   border-radius: 4px;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
 `;
 
 const GoalCount = styled.input`
@@ -65,16 +114,22 @@ const GoalCount = styled.input`
   border: 1px solid #ddd;
   border-radius: 4px;
   text-align: center;
-  font-size: 14px;
+  font-size: 16px;
+  -webkit-appearance: none;
+
+  @media (max-width: 480px) {
+    width: 100%;
+  }
 `;
 
 const ScoreInput = styled.input`
   width: 100%;
-  padding: 8px 16px;
+  padding: 12px 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 18px;
   text-align: center;
+  -webkit-appearance: none;
 `;
 
 const ValidationError = styled.div`
@@ -83,10 +138,64 @@ const ValidationError = styled.div`
   margin-top: 4px;
 `;
 
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 8px;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    flex-direction: column;
+  }
+`;
+
+const PageHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+`;
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+`;
+
+const ModalContent = styled(Card)`
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+`;
+
+const GoalRowActions = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  @media (max-width: 480px) {
+    width: 100%;
+    justify-content: space-between;
+  }
+`;
+
 interface PlayerGoalInput {
   playerId: string;
   teamId: string;
-  goals: string; // Use string to allow empty input
+  goals: string;
 }
 
 export const GameDayView: React.FC = () => {
@@ -107,21 +216,18 @@ export const GameDayView: React.FC = () => {
   const [showTransfer, setShowTransfer] = useState(false);
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
 
-  // Add/Edit match form state - use strings for inputs to allow empty values
   const [team1Id, setTeam1Id] = useState('');
   const [team2Id, setTeam2Id] = useState('');
   const [score1Input, setScore1Input] = useState('0');
   const [score2Input, setScore2Input] = useState('0');
   const [playerGoals, setPlayerGoals] = useState<PlayerGoalInput[]>([]);
 
-  // Transfer form state
   const [transferPlayerId, setTransferPlayerId] = useState('');
   const [transferFromTeamId, setTransferFromTeamId] = useState('');
   const [transferToTeamId, setTransferToTeamId] = useState('');
 
   const gameDay = getGameDay(id || '');
 
-  // Initialize team1Id and team2Id when teams are available
   useEffect(() => {
     if (teams.length >= 2 && !team1Id && !team2Id) {
       setTeam1Id(teams[0].id);
@@ -129,7 +235,6 @@ export const GameDayView: React.FC = () => {
     }
   }, [teams, team1Id, team2Id]);
 
-  // Auto-select different team when team1 changes
   useEffect(() => {
     if (team1Id && team1Id === team2Id) {
       const differentTeam = teams.find(t => t.id !== team1Id);
@@ -139,7 +244,6 @@ export const GameDayView: React.FC = () => {
     }
   }, [team1Id, team2Id, teams]);
 
-  // Auto-set transfer "from team" when player is selected
   useEffect(() => {
     if (transferPlayerId && gameDay) {
       const assignment = gameDay.playerTeamAssignments.find(
@@ -147,7 +251,6 @@ export const GameDayView: React.FC = () => {
       );
       if (assignment) {
         setTransferFromTeamId(assignment.teamId);
-        // Reset "to team" if it's the same as "from team"
         if (transferToTeamId === assignment.teamId) {
           setTransferToTeamId('');
         }
@@ -167,13 +270,13 @@ export const GameDayView: React.FC = () => {
   const stats = getTeamDayStats(gameDay.id);
 
   const getTeamName = (teamId: string) =>
-    teams.find(t => t.id === teamId)?.name || 'Невідома команда';
+    teams.find(t => t.id === teamId)?.name || '?';
 
   const getTeamColor = (teamId: string) =>
     teams.find(t => t.id === teamId)?.color || '#999';
 
   const getPlayerName = (playerId: string) =>
-    players.find(p => p.id === playerId)?.name || 'Невідомий гравець';
+    players.find(p => p.id === playerId)?.name || '?';
 
   const getPlayersForTeam = (teamId: string) => {
     return gameDay.playerTeamAssignments
@@ -182,36 +285,30 @@ export const GameDayView: React.FC = () => {
       .filter(Boolean);
   };
 
-  // Get available teams for team2 (exclude team1)
   const getAvailableTeamsForTeam2 = () => {
     return teams.filter(t => t.id !== team1Id);
   };
 
-  // Get available teams for transfer "to" (exclude current team)
   const getAvailableTeamsForTransfer = () => {
     return teams.filter(t => t.id !== transferFromTeamId);
   };
 
-  // Parse score input to number
   const parseScore = (value: string): number => {
     const parsed = parseInt(value, 10);
     return isNaN(parsed) ? 0 : Math.max(0, parsed);
   };
 
-  // Parse goals string to number
   const parseGoals = (value: string): number => {
     const parsed = parseInt(value, 10);
     return isNaN(parsed) ? 0 : Math.max(0, parsed);
   };
 
-  // Calculate total goals by team from playerGoals
   const getTotalPlayerGoalsForTeam = (teamId: string): number => {
     return playerGoals
       .filter(pg => pg.teamId === teamId)
       .reduce((sum, pg) => sum + parseGoals(pg.goals), 0);
   };
 
-  // Validation
   const score1 = parseScore(score1Input);
   const score2 = parseScore(score2Input);
   const team1PlayerGoals = getTotalPlayerGoalsForTeam(team1Id);
@@ -248,7 +345,6 @@ export const GameDayView: React.FC = () => {
     if (field === 'playerId') {
       updated[index].playerId = value;
     } else {
-      // Allow empty string or numbers only
       if (value === '' || /^\d+$/.test(value)) {
         updated[index].goals = value;
       }
@@ -268,7 +364,7 @@ export const GameDayView: React.FC = () => {
     }
   };
 
-  const handleSaveMatch = () => {
+  const handleSaveMatch = async () => {
     if (team1Id === team2Id) {
       alert('Виберіть різні команди');
       return;
@@ -279,7 +375,6 @@ export const GameDayView: React.FC = () => {
       return;
     }
 
-    // Convert playerGoals to individual Goal objects
     const goals: Omit<Goal, 'id'>[] = [];
     playerGoals.forEach(pg => {
       const goalCount = parseGoals(pg.goals);
@@ -292,8 +387,7 @@ export const GameDayView: React.FC = () => {
     });
 
     if (editingMatchId) {
-      // Update existing match
-      updateMatch(gameDay.id, editingMatchId, {
+      await updateMatch(gameDay.id, editingMatchId, {
         team1Id,
         team2Id,
         score1,
@@ -301,8 +395,7 @@ export const GameDayView: React.FC = () => {
         goals: goals.map(g => ({ ...g, id: Date.now().toString() + Math.random() })),
       });
     } else {
-      // Add new match
-      addMatch(gameDay.id, {
+      await addMatch(gameDay.id, {
         team1Id,
         team2Id,
         score1,
@@ -322,7 +415,6 @@ export const GameDayView: React.FC = () => {
     setScore1Input(match.score1.toString());
     setScore2Input(match.score2.toString());
 
-    // Convert goals back to playerGoals format
     const goalsMap = new Map<string, { playerId: string; teamId: string; count: number }>();
     match.goals.forEach(goal => {
       const key = `${goal.playerId}-${goal.teamId}`;
@@ -350,7 +442,7 @@ export const GameDayView: React.FC = () => {
     resetForm();
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     if (!transferPlayerId || !transferFromTeamId || !transferToTeamId) {
       alert('Заповніть всі поля');
       return;
@@ -361,14 +453,13 @@ export const GameDayView: React.FC = () => {
       return;
     }
 
-    transferPlayer(gameDay.id, transferPlayerId, transferFromTeamId, transferToTeamId);
+    await transferPlayer(gameDay.id, transferPlayerId, transferFromTeamId, transferToTeamId);
     setShowTransfer(false);
     setTransferPlayerId('');
     setTransferFromTeamId('');
     setTransferToTeamId('');
   };
 
-  // Group goals by player for display
   const groupGoalsByPlayer = (goals: Goal[]) => {
     const grouped: { [key: string]: { playerId: string; teamId: string; count: number } } = {};
     goals.forEach(goal => {
@@ -383,81 +474,83 @@ export const GameDayView: React.FC = () => {
 
   return (
     <Container>
-      <Flex $justify="space-between" $align="center">
+      <PageHeader>
         <div>
-          <Title>{gameDay.name}</Title>
-          <p style={{ color: '#666', marginTop: '-16px' }}>
+          <Title style={{ marginBottom: '4px' }}>{gameDay.name}</Title>
+          <p style={{ color: '#666', margin: 0 }}>
             {new Date(gameDay.date).toLocaleDateString('uk-UA')}
           </p>
         </div>
-        <Flex $gap="8px">
-          <Button onClick={() => setShowTransfer(true)}>Трансфер гравця</Button>
-          <Button onClick={() => navigate('/')}>Назад</Button>
-        </Flex>
-      </Flex>
+        <HeaderActions>
+          <Button onClick={() => setShowTransfer(true)}>Трансфер</Button>
+          <Button $variant="secondary" onClick={() => navigate('/')}>Назад</Button>
+        </HeaderActions>
+      </PageHeader>
 
       {/* Standings Table */}
       <Card>
         <Subtitle>Турнірна таблиця</Subtitle>
         {stats.length === 0 ? (
-          <EmptyState>Немає даних для відображення</EmptyState>
+          <EmptyState>Немає даних</EmptyState>
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>#</Th>
-                <Th>Команда</Th>
-                <Th>І</Th>
-                <Th>В</Th>
-                <Th>Н</Th>
-                <Th>П</Th>
-                <Th>ЗГ</Th>
-                <Th>ПГ</Th>
-                <Th>РГ</Th>
-                <Th>О</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.map((team, index) => (
-                <Tr key={team.teamId}>
-                  <Td>{index + 1}</Td>
-                  <Td>
-                    <TeamBadge $color={team.teamColor}>{team.teamName}</TeamBadge>
-                  </Td>
-                  <Td>{team.matchesPlayed}</Td>
-                  <Td>{team.wins}</Td>
-                  <Td>{team.draws}</Td>
-                  <Td>{team.losses}</Td>
-                  <Td>{team.goalsFor}</Td>
-                  <Td>{team.goalsAgainst}</Td>
-                  <Td>{team.goalDifference}</Td>
-                  <Td>
-                    <strong>{team.points}</strong>
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
+          <TableWrapper>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>#</Th>
+                  <Th>Команда</Th>
+                  <Th>І</Th>
+                  <Th>В</Th>
+                  <Th>Н</Th>
+                  <Th>П</Th>
+                  <Th>ЗГ</Th>
+                  <Th>ПГ</Th>
+                  <Th>РГ</Th>
+                  <Th>О</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.map((team, index) => (
+                  <Tr key={team.teamId}>
+                    <Td>{index + 1}</Td>
+                    <Td>
+                      <TeamBadge $color={team.teamColor}>{team.teamName}</TeamBadge>
+                    </Td>
+                    <Td>{team.matchesPlayed}</Td>
+                    <Td>{team.wins}</Td>
+                    <Td>{team.draws}</Td>
+                    <Td>{team.losses}</Td>
+                    <Td>{team.goalsFor}</Td>
+                    <Td>{team.goalsAgainst}</Td>
+                    <Td>{team.goalDifference}</Td>
+                    <Td>
+                      <strong>{team.points}</strong>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrapper>
         )}
       </Card>
 
       {/* Add/Edit Match Section */}
       <Card>
-        <Flex $justify="space-between" $align="center">
-          <Subtitle>Матчі</Subtitle>
+        <MobileStack style={{ marginBottom: '16px' }}>
+          <Subtitle style={{ margin: 0, flex: 1 }}>Матчі</Subtitle>
           {!showAddMatch && (
             <Button onClick={() => setShowAddMatch(true)}>+ Додати матч</Button>
           )}
-        </Flex>
+        </MobileStack>
 
         {showAddMatch && (
-          <Card style={{ background: '#f5f5f5', marginTop: '16px' }}>
-            <Subtitle style={{ fontSize: '18px', marginBottom: '16px' }}>
+          <Card style={{ background: '#f5f5f5' }}>
+            <Subtitle style={{ fontSize: '16px', marginBottom: '16px' }}>
               {editingMatchId ? 'Редагування матчу' : 'Новий матч'}
             </Subtitle>
 
-            <Flex $gap="16px">
-              <FormGroup style={{ flex: 1 }}>
+            <MobileStack style={{ marginBottom: '16px' }}>
+              <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Команда 1</Label>
                 <Select value={team1Id} onChange={e => setTeam1Id(e.target.value)}>
                   {teams.map(team => (
@@ -468,7 +561,7 @@ export const GameDayView: React.FC = () => {
                 </Select>
               </FormGroup>
 
-              <FormGroup style={{ flex: 1 }}>
+              <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Команда 2</Label>
                 <Select value={team2Id} onChange={e => setTeam2Id(e.target.value)}>
                   {getAvailableTeamsForTeam2().map(team => (
@@ -478,10 +571,10 @@ export const GameDayView: React.FC = () => {
                   ))}
                 </Select>
               </FormGroup>
-            </Flex>
+            </MobileStack>
 
-            <Flex $gap="16px">
-              <FormGroup style={{ flex: 1 }}>
+            <MobileStack style={{ marginBottom: '16px' }}>
+              <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Рахунок {getTeamName(team1Id)}</Label>
                 <ScoreInput
                   type="text"
@@ -489,13 +582,11 @@ export const GameDayView: React.FC = () => {
                   value={score1Input}
                   onChange={e => {
                     const value = e.target.value;
-                    // Allow empty string or numbers only
                     if (value === '' || /^\d+$/.test(value)) {
                       setScore1Input(value);
                     }
                   }}
                   onBlur={() => {
-                    // Set to 0 if empty on blur
                     if (score1Input === '') {
                       setScore1Input('0');
                     }
@@ -503,12 +594,12 @@ export const GameDayView: React.FC = () => {
                 />
                 {team1GoalsExceeded && (
                   <ValidationError>
-                    Голів гравців ({team1PlayerGoals}) більше ніж рахунок ({score1})
+                    Голів ({team1PlayerGoals}) &gt; рахунок ({score1})
                   </ValidationError>
                 )}
               </FormGroup>
 
-              <FormGroup style={{ flex: 1 }}>
+              <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Рахунок {getTeamName(team2Id)}</Label>
                 <ScoreInput
                   type="text"
@@ -528,22 +619,22 @@ export const GameDayView: React.FC = () => {
                 />
                 {team2GoalsExceeded && (
                   <ValidationError>
-                    Голів гравців ({team2PlayerGoals}) більше ніж рахунок ({score2})
+                    Голів ({team2PlayerGoals}) &gt; рахунок ({score2})
                   </ValidationError>
                 )}
               </FormGroup>
-            </Flex>
+            </MobileStack>
 
             <FormGroup>
               <Label>Голи гравців (необов'язково)</Label>
-              <Flex $gap="8px" $wrap="wrap">
+              <ButtonGroup>
                 <Button type="button" onClick={() => handleAddPlayerGoal(team1Id)}>
-                  + Гравець {getTeamName(team1Id)}
+                  + {getTeamName(team1Id)}
                 </Button>
                 <Button type="button" onClick={() => handleAddPlayerGoal(team2Id)}>
-                  + Гравець {getTeamName(team2Id)}
+                  + {getTeamName(team2Id)}
                 </Button>
-              </Flex>
+              </ButtonGroup>
             </FormGroup>
 
             {playerGoals.map((pg, index) => (
@@ -559,33 +650,35 @@ export const GameDayView: React.FC = () => {
                     </option>
                   ))}
                 </Select>
-                <Badge $color={getTeamColor(pg.teamId)}>{getTeamName(pg.teamId)}</Badge>
-                <GoalCount
-                  type="text"
-                  inputMode="numeric"
-                  value={pg.goals}
-                  onChange={e => handlePlayerGoalChange(index, 'goals', e.target.value)}
-                  onBlur={() => {
-                    if (pg.goals === '') {
-                      handlePlayerGoalChange(index, 'goals', '0');
-                    }
-                  }}
-                />
-                <span style={{ fontSize: '14px', color: '#666' }}>голів</span>
-                <Button $variant="danger" onClick={() => handleRemovePlayerGoal(index)}>
-                  ✕
-                </Button>
+                <GoalRowActions>
+                  <Badge $color={getTeamColor(pg.teamId)}>{getTeamName(pg.teamId)}</Badge>
+                  <GoalCount
+                    type="text"
+                    inputMode="numeric"
+                    value={pg.goals}
+                    onChange={e => handlePlayerGoalChange(index, 'goals', e.target.value)}
+                    onBlur={() => {
+                      if (pg.goals === '') {
+                        handlePlayerGoalChange(index, 'goals', '0');
+                      }
+                    }}
+                    style={{ width: '50px' }}
+                  />
+                  <Button $variant="danger" onClick={() => handleRemovePlayerGoal(index)}>
+                    ✕
+                  </Button>
+                </GoalRowActions>
               </GoalInputRow>
             ))}
 
-            <Flex $gap="8px" style={{ marginTop: '16px' }}>
+            <ButtonGroup style={{ marginTop: '16px' }}>
               <Button onClick={handleSaveMatch} disabled={hasValidationErrors}>
-                {editingMatchId ? 'Зберегти зміни' : 'Зберегти матч'}
+                {editingMatchId ? 'Зберегти' : 'Додати'}
               </Button>
               <Button $variant="secondary" onClick={handleCancelEdit}>
                 Скасувати
               </Button>
-            </Flex>
+            </ButtonGroup>
           </Card>
         )}
 
@@ -595,8 +688,8 @@ export const GameDayView: React.FC = () => {
         ) : (
           gameDay.matches.map(match => (
             <MatchCard key={match.id}>
-              <Flex $justify="space-between" $align="center">
-                <Flex $gap="24px" $align="center" style={{ flex: 1 }}>
+              <MatchContent>
+                <MatchTeams>
                   <TeamBadge $color={getTeamColor(match.team1Id)}>
                     {getTeamName(match.team1Id)}
                   </TeamBadge>
@@ -606,8 +699,8 @@ export const GameDayView: React.FC = () => {
                   <TeamBadge $color={getTeamColor(match.team2Id)}>
                     {getTeamName(match.team2Id)}
                   </TeamBadge>
-                </Flex>
-                <Flex $gap="8px">
+                </MatchTeams>
+                <ButtonGroup>
                   <Button
                     onClick={() => handleEditMatch(match)}
                     disabled={editingMatchId === match.id}
@@ -616,28 +709,27 @@ export const GameDayView: React.FC = () => {
                   </Button>
                   <Button
                     $variant="danger"
-                    onClick={() => {
+                    onClick={async () => {
                       if (window.confirm('Видалити цей матч?')) {
-                        deleteMatch(gameDay.id, match.id);
+                        await deleteMatch(gameDay.id, match.id);
                       }
                     }}
                   >
                     Видалити
                   </Button>
-                </Flex>
-              </Flex>
+                </ButtonGroup>
+              </MatchContent>
 
               {match.goals.length > 0 && (
                 <GoalsList>
-                  <strong>Голи:</strong>
-                  <ul style={{ marginTop: '4px', paddingLeft: '20px' }}>
-                    {groupGoalsByPlayer(match.goals).map((goalInfo, idx) => (
-                      <li key={idx}>
-                        {getPlayerName(goalInfo.playerId)} ({getTeamName(goalInfo.teamId)})
-                        {goalInfo.count > 1 && ` × ${goalInfo.count}`}
-                      </li>
-                    ))}
-                  </ul>
+                  <strong>Голи:</strong>{' '}
+                  {groupGoalsByPlayer(match.goals).map((goalInfo, idx, arr) => (
+                    <span key={idx}>
+                      {getPlayerName(goalInfo.playerId)}
+                      {goalInfo.count > 1 && ` ×${goalInfo.count}`}
+                      {idx < arr.length - 1 && ', '}
+                    </span>
+                  ))}
                 </GoalsList>
               )}
             </MatchCard>
@@ -647,25 +739,8 @@ export const GameDayView: React.FC = () => {
 
       {/* Transfer Modal */}
       {showTransfer && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowTransfer(false)}
-        >
-          <Card
-            style={{ maxWidth: '500px', width: '90%' }}
-            onClick={e => e.stopPropagation()}
-          >
+        <Modal onClick={() => setShowTransfer(false)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
             <Subtitle>Трансфер гравця</Subtitle>
 
             <FormGroup>
@@ -697,7 +772,7 @@ export const GameDayView: React.FC = () => {
                 <option value="">
                   {transferFromTeamId
                     ? getTeamName(transferFromTeamId)
-                    : 'Автоматично визначиться'}
+                    : 'Автоматично'}
                 </option>
               </Select>
             </FormGroup>
@@ -718,16 +793,16 @@ export const GameDayView: React.FC = () => {
               </Select>
             </FormGroup>
 
-            <Flex $gap="8px">
+            <ButtonGroup>
               <Button onClick={handleTransfer} disabled={!transferToTeamId}>
                 Трансфер
               </Button>
               <Button $variant="secondary" onClick={() => setShowTransfer(false)}>
                 Скасувати
               </Button>
-            </Flex>
-          </Card>
-        </div>
+            </ButtonGroup>
+          </ModalContent>
+        </Modal>
       )}
     </Container>
   );

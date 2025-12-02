@@ -9,12 +9,14 @@ import {
   Input,
   Label,
   FormGroup,
-  Flex,
   Table,
   Th,
   Td,
   Tr,
   EmptyState,
+  MobileStack,
+  ButtonGroup,
+  TableWrapper,
 } from '@/components/UI';
 
 export const PlayersPage: React.FC = () => {
@@ -24,13 +26,13 @@ export const PlayersPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newPlayerName.trim()) {
       alert('Введіть імʼя гравця');
       return;
     }
 
-    addPlayer({ name: newPlayerName.trim() });
+    await addPlayer({ name: newPlayerName.trim() });
     setNewPlayerName('');
     setShowAdd(false);
   };
@@ -40,31 +42,31 @@ export const PlayersPage: React.FC = () => {
     setEditingName(name);
   };
 
-  const handleSaveEdit = (id: string) => {
+  const handleSaveEdit = async (id: string) => {
     if (!editingName.trim()) {
       alert('Введіть імʼя гравця');
       return;
     }
 
-    updatePlayer(id, { name: editingName.trim() });
+    await updatePlayer(id, { name: editingName.trim() });
     setEditingId(null);
     setEditingName('');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Видалити цього гравця?')) {
-      deletePlayer(id);
+      await deletePlayer(id);
     }
   };
 
   return (
     <Container>
-      <Flex $justify="space-between" $align="center">
-        <Title>Гравці</Title>
+      <MobileStack style={{ marginBottom: '24px' }}>
+        <Title style={{ margin: 0, flex: 1 }}>Гравці</Title>
         <Button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Скасувати' : '+ Додати гравця'}
+          {showAdd ? 'Скасувати' : '+ Додати'}
         </Button>
-      </Flex>
+      </MobileStack>
 
       {showAdd && (
         <Card>
@@ -76,6 +78,7 @@ export const PlayersPage: React.FC = () => {
               value={newPlayerName}
               onChange={e => setNewPlayerName(e.target.value)}
               placeholder="Введіть імʼя гравця"
+              onKeyPress={e => e.key === 'Enter' && handleAdd()}
             />
           </FormGroup>
           <Button onClick={handleAdd}>Додати</Button>
@@ -83,69 +86,72 @@ export const PlayersPage: React.FC = () => {
       )}
 
       <Card>
-        <Subtitle>Список гравців</Subtitle>
+        <Subtitle>Список гравців ({players.length})</Subtitle>
         {players.length === 0 ? (
           <EmptyState>Ще немає гравців</EmptyState>
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>#</Th>
-                <Th>Імʼя</Th>
-                <Th>Дії</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((player, index) => (
-                <Tr key={player.id}>
-                  <Td>{index + 1}</Td>
-                  <Td>
-                    {editingId === player.id ? (
-                      <Input
-                        type="text"
-                        value={editingName}
-                        onChange={e => setEditingName(e.target.value)}
-                      />
-                    ) : (
-                      player.name
-                    )}
-                  </Td>
-                  <Td>
-                    <Flex $gap="8px">
+          <TableWrapper>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>#</Th>
+                  <Th>Імʼя</Th>
+                  <Th>Дії</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {players.map((player, index) => (
+                  <Tr key={player.id}>
+                    <Td>{index + 1}</Td>
+                    <Td>
                       {editingId === player.id ? (
-                        <>
-                          <Button onClick={() => handleSaveEdit(player.id)}>
-                            Зберегти
-                          </Button>
-                          <Button
-                            $variant="secondary"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Скасувати
-                          </Button>
-                        </>
+                        <Input
+                          type="text"
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                          onKeyPress={e => e.key === 'Enter' && handleSaveEdit(player.id)}
+                          autoFocus
+                        />
                       ) : (
-                        <>
-                          <Button onClick={() => handleEdit(player.id, player.name)}>
-                            Редагувати
-                          </Button>
-                          <Button
-                            $variant="danger"
-                            onClick={() => handleDelete(player.id)}
-                          >
-                            Видалити
-                          </Button>
-                        </>
+                        player.name
                       )}
-                    </Flex>
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
+                    </Td>
+                    <Td>
+                      <ButtonGroup>
+                        {editingId === player.id ? (
+                          <>
+                            <Button onClick={() => handleSaveEdit(player.id)}>
+                              Зберегти
+                            </Button>
+                            <Button
+                              $variant="secondary"
+                              onClick={() => setEditingId(null)}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button onClick={() => handleEdit(player.id, player.name)}>
+                              ✎
+                            </Button>
+                            <Button
+                              $variant="danger"
+                              onClick={() => handleDelete(player.id)}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        )}
+                      </ButtonGroup>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrapper>
         )}
       </Card>
     </Container>
   );
 };
-

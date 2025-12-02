@@ -9,19 +9,24 @@ import {
   Input,
   Label,
   FormGroup,
-  Flex,
   Select,
+  MobileStack,
+  ButtonGroup,
 } from '@/components/UI';
 import styled from 'styled-components';
 
 const PlayerAssignment = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.md};
+  gap: 8px;
   align-items: center;
-  padding: ${({ theme }) => theme.spacing.sm};
+  padding: 8px;
   background: ${({ theme }) => theme.colors.background};
   border-radius: ${({ theme }) => theme.borderRadius.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: 8px;
+
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+  }
 `;
 
 const TeamSection = styled.div`
@@ -29,12 +34,20 @@ const TeamSection = styled.div`
 `;
 
 const TeamHeader = styled.div<{ $color: string }>`
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  padding: 8px 16px;
   background: ${({ $color }) => $color};
   color: white;
   font-weight: 600;
   border-radius: ${({ theme }) => theme.borderRadius.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: 8px;
+  font-size: 14px;
+`;
+
+const NoPlayers = styled.p`
+  color: #999;
+  font-size: 14px;
+  margin-left: 8px;
+  margin-bottom: 8px;
 `;
 
 export const CreateGameDay: React.FC = () => {
@@ -72,7 +85,7 @@ export const CreateGameDay: React.FC = () => {
     setPlayerAssignments(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -80,7 +93,7 @@ export const CreateGameDay: React.FC = () => {
       return;
     }
 
-    const gameDay = addGameDay({
+    const gameDay = await addGameDay({
       name: name.trim(),
       date,
       playerTeamAssignments: playerAssignments.map(pa => ({
@@ -94,7 +107,6 @@ export const CreateGameDay: React.FC = () => {
     navigate(`/game-day/${gameDay.id}`);
   };
 
-  // Group players by team for display
   const playersByTeam = teams.map(team => ({
     team,
     players: playerAssignments
@@ -128,19 +140,27 @@ export const CreateGameDay: React.FC = () => {
           </FormGroup>
 
           <FormGroup>
-            <Label>Гравці та команди</Label>
-            <Button type="button" onClick={handleAddPlayer}>
-              + Додати гравця
-            </Button>
+            <MobileStack>
+              <Label style={{ margin: 0, flex: 1 }}>Гравці та команди</Label>
+              <Button type="button" onClick={handleAddPlayer}>
+                + Гравець
+              </Button>
+            </MobileStack>
           </FormGroup>
+
+          {players.length === 0 && (
+            <NoPlayers>
+              Спочатку додайте гравців у розділі "Гравці"
+            </NoPlayers>
+          )}
 
           {playersByTeam.map(({ team, players: teamPlayers }) => (
             <TeamSection key={team.id}>
-              <TeamHeader $color={team.color}>{team.name}</TeamHeader>
+              <TeamHeader $color={team.color}>
+                {team.name} ({teamPlayers.length})
+              </TeamHeader>
               {teamPlayers.length === 0 ? (
-                <p style={{ color: '#999', fontSize: '14px', marginLeft: '8px' }}>
-                  Немає гравців
-                </p>
+                <NoPlayers>Немає гравців</NoPlayers>
               ) : (
                 teamPlayers.map(pa => (
                   <PlayerAssignment key={pa.index}>
@@ -171,7 +191,7 @@ export const CreateGameDay: React.FC = () => {
                       $variant="danger"
                       onClick={() => handleRemovePlayer(pa.index)}
                     >
-                      Видалити
+                      ✕
                     </Button>
                   </PlayerAssignment>
                 ))
@@ -179,7 +199,7 @@ export const CreateGameDay: React.FC = () => {
             </TeamSection>
           ))}
 
-          <Flex $gap="8px" style={{ marginTop: '24px' }}>
+          <ButtonGroup style={{ marginTop: '24px' }}>
             <Button type="submit">Створити</Button>
             <Button
               type="button"
@@ -188,10 +208,9 @@ export const CreateGameDay: React.FC = () => {
             >
               Скасувати
             </Button>
-          </Flex>
+          </ButtonGroup>
         </form>
       </Card>
     </Container>
   );
 };
-

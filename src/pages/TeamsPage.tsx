@@ -9,14 +9,26 @@ import {
   Input,
   Label,
   FormGroup,
-  Flex,
   Table,
   Th,
   Td,
   Tr,
   EmptyState,
   Badge,
+  MobileStack,
+  ButtonGroup,
+  TableWrapper,
 } from '@/components/UI';
+import styled from 'styled-components';
+
+const ColorInput = styled.input`
+  width: 50px;
+  height: 40px;
+  padding: 4px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  cursor: pointer;
+`;
 
 export const TeamsPage: React.FC = () => {
   const { teams, addTeam, updateTeam, deleteTeam } = useApp();
@@ -27,13 +39,13 @@ export const TeamsPage: React.FC = () => {
   const [editingName, setEditingName] = useState('');
   const [editingColor, setEditingColor] = useState('');
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newTeamName.trim()) {
       alert('Введіть назву команди');
       return;
     }
 
-    addTeam({ name: newTeamName.trim(), color: newTeamColor });
+    await addTeam({ name: newTeamName.trim(), color: newTeamColor });
     setNewTeamName('');
     setNewTeamColor('#2196F3');
     setShowAdd(false);
@@ -45,32 +57,32 @@ export const TeamsPage: React.FC = () => {
     setEditingColor(color);
   };
 
-  const handleSaveEdit = (id: string) => {
+  const handleSaveEdit = async (id: string) => {
     if (!editingName.trim()) {
       alert('Введіть назву команди');
       return;
     }
 
-    updateTeam(id, { name: editingName.trim(), color: editingColor });
+    await updateTeam(id, { name: editingName.trim(), color: editingColor });
     setEditingId(null);
     setEditingName('');
     setEditingColor('');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Видалити цю команду?')) {
-      deleteTeam(id);
+      await deleteTeam(id);
     }
   };
 
   return (
     <Container>
-      <Flex $justify="space-between" $align="center">
-        <Title>Команди</Title>
+      <MobileStack style={{ marginBottom: '24px' }}>
+        <Title style={{ margin: 0, flex: 1 }}>Команди</Title>
         <Button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Скасувати' : '+ Додати команду'}
+          {showAdd ? 'Скасувати' : '+ Додати'}
         </Button>
-      </Flex>
+      </MobileStack>
 
       {showAdd && (
         <Card>
@@ -86,7 +98,7 @@ export const TeamsPage: React.FC = () => {
           </FormGroup>
           <FormGroup>
             <Label>Колір</Label>
-            <Input
+            <ColorInput
               type="color"
               value={newTeamColor}
               onChange={e => setNewTeamColor(e.target.value)}
@@ -97,83 +109,84 @@ export const TeamsPage: React.FC = () => {
       )}
 
       <Card>
-        <Subtitle>Список команд</Subtitle>
+        <Subtitle>Список команд ({teams.length})</Subtitle>
         {teams.length === 0 ? (
           <EmptyState>Ще немає команд</EmptyState>
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>#</Th>
-                <Th>Назва</Th>
-                <Th>Колір</Th>
-                <Th>Дії</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {teams.map((team, index) => (
-                <Tr key={team.id}>
-                  <Td>{index + 1}</Td>
-                  <Td>
-                    {editingId === team.id ? (
-                      <Input
-                        type="text"
-                        value={editingName}
-                        onChange={e => setEditingName(e.target.value)}
-                      />
-                    ) : (
-                      team.name
-                    )}
-                  </Td>
-                  <Td>
-                    {editingId === team.id ? (
-                      <Input
-                        type="color"
-                        value={editingColor}
-                        onChange={e => setEditingColor(e.target.value)}
-                      />
-                    ) : (
-                      <Badge $color={team.color}>{team.color}</Badge>
-                    )}
-                  </Td>
-                  <Td>
-                    <Flex $gap="8px">
+          <TableWrapper>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>#</Th>
+                  <Th>Назва</Th>
+                  <Th>Колір</Th>
+                  <Th>Дії</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {teams.map((team, index) => (
+                  <Tr key={team.id}>
+                    <Td>{index + 1}</Td>
+                    <Td>
                       {editingId === team.id ? (
-                        <>
-                          <Button onClick={() => handleSaveEdit(team.id)}>
-                            Зберегти
-                          </Button>
-                          <Button
-                            $variant="secondary"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Скасувати
-                          </Button>
-                        </>
+                        <Input
+                          type="text"
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                        />
                       ) : (
-                        <>
-                          <Button
-                            onClick={() => handleEdit(team.id, team.name, team.color)}
-                          >
-                            Редагувати
-                          </Button>
-                          <Button
-                            $variant="danger"
-                            onClick={() => handleDelete(team.id)}
-                          >
-                            Видалити
-                          </Button>
-                        </>
+                        team.name
                       )}
-                    </Flex>
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
+                    </Td>
+                    <Td>
+                      {editingId === team.id ? (
+                        <ColorInput
+                          type="color"
+                          value={editingColor}
+                          onChange={e => setEditingColor(e.target.value)}
+                        />
+                      ) : (
+                        <Badge $color={team.color}>{team.name}</Badge>
+                      )}
+                    </Td>
+                    <Td>
+                      <ButtonGroup>
+                        {editingId === team.id ? (
+                          <>
+                            <Button onClick={() => handleSaveEdit(team.id)}>
+                              Зберегти
+                            </Button>
+                            <Button
+                              $variant="secondary"
+                              onClick={() => setEditingId(null)}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => handleEdit(team.id, team.name, team.color)}
+                            >
+                              ✎
+                            </Button>
+                            <Button
+                              $variant="danger"
+                              onClick={() => handleDelete(team.id)}
+                            >
+                              ✕
+                            </Button>
+                          </>
+                        )}
+                      </ButtonGroup>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrapper>
         )}
       </Card>
     </Container>
   );
 };
-

@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import {
   collection,
   doc,
-  getDocs,
   setDoc,
   deleteDoc,
   onSnapshot,

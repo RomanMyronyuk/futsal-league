@@ -10,19 +10,35 @@ import {
   Tr,
   EmptyState,
   Badge,
+  TableWrapper,
 } from '@/components/UI';
+import styled from 'styled-components';
+
+const GoalsBadges = styled.div`
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+`;
+
+const StatNumber = styled.strong<{ $color?: string }>`
+  font-size: 16px;
+  color: ${({ $color }) => $color || 'inherit'};
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
+`;
 
 export const PlayerStatsPage: React.FC = () => {
   const { getPlayerStats, teams } = useApp();
   const playerStats = getPlayerStats();
 
   const getTeamName = (teamId: string) =>
-    teams.find(t => t.id === teamId)?.name || 'Невідома команда';
+    teams.find(t => t.id === teamId)?.name || '?';
 
   const getTeamColor = (teamId: string) =>
     teams.find(t => t.id === teamId)?.color || '#999';
 
-  // Filter out players with no activity
   const activePlayerStats = playerStats.filter(
     stat => stat.totalMatches > 0 || stat.totalGoals > 0
   );
@@ -33,54 +49,59 @@ export const PlayerStatsPage: React.FC = () => {
 
       <Card>
         {activePlayerStats.length === 0 ? (
-          <EmptyState>Ще немає статистики. Додайте матчі, щоб побачити статистику гравців.</EmptyState>
+          <EmptyState>
+            Ще немає статистики.<br />
+            Додайте матчі, щоб побачити статистику гравців.
+          </EmptyState>
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>#</Th>
-                <Th>Гравець</Th>
-                <Th>Голів</Th>
-                <Th>Ігор</Th>
-                <Th>Ігрових днів</Th>
-                <Th>Голи по командах</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {activePlayerStats.map((stat, index) => (
-                <Tr key={stat.playerId}>
-                  <Td>{index + 1}</Td>
-                  <Td>
-                    <strong>{stat.playerName}</strong>
-                  </Td>
-                  <Td>
-                    <strong style={{ fontSize: '18px', color: '#4caf50' }}>
-                      {stat.totalGoals}
-                    </strong>
-                  </Td>
-                  <Td>
-                    <strong style={{ fontSize: '16px', color: '#1976d2' }}>
-                      {stat.totalMatches}
-                    </strong>
-                  </Td>
-                  <Td>{stat.gameDaysPlayed}</Td>
-                  <Td>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {Object.entries(stat.goalsByTeam).length > 0 ? (
-                        Object.entries(stat.goalsByTeam).map(([teamId, goals]) => (
-                          <Badge key={teamId} $color={getTeamColor(teamId)}>
-                            {getTeamName(teamId)}: {goals}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span style={{ color: '#999' }}>—</span>
-                      )}
-                    </div>
-                  </Td>
-                </Tr>
-              ))}
-            </tbody>
-          </Table>
+          <TableWrapper>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>#</Th>
+                  <Th>Гравець</Th>
+                  <Th>⚽</Th>
+                  <Th>Ігор</Th>
+                  <Th>Днів</Th>
+                  <Th>По командах</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {activePlayerStats.map((stat, index) => (
+                  <Tr key={stat.playerId}>
+                    <Td>{index + 1}</Td>
+                    <Td>
+                      <strong>{stat.playerName}</strong>
+                    </Td>
+                    <Td>
+                      <StatNumber $color="#4caf50">
+                        {stat.totalGoals}
+                      </StatNumber>
+                    </Td>
+                    <Td>
+                      <StatNumber $color="#1976d2">
+                        {stat.totalMatches}
+                      </StatNumber>
+                    </Td>
+                    <Td>{stat.gameDaysPlayed}</Td>
+                    <Td>
+                      <GoalsBadges>
+                        {Object.entries(stat.goalsByTeam).length > 0 ? (
+                          Object.entries(stat.goalsByTeam).map(([teamId, goals]) => (
+                            <Badge key={teamId} $color={getTeamColor(teamId)}>
+                              {getTeamName(teamId)}: {goals}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span style={{ color: '#999' }}>—</span>
+                        )}
+                      </GoalsBadges>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrapper>
         )}
       </Card>
     </Container>

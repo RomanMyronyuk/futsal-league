@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import {
@@ -6,9 +6,9 @@ import {
   Title,
   Card,
   Button,
-  Flex,
   EmptyState,
   Badge,
+  ButtonGroup,
 } from '@/components/UI';
 import styled from 'styled-components';
 
@@ -20,6 +20,12 @@ const GameDayCard = styled(Card)`
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.md};
   }
+
+  @media (max-width: 480px) {
+    &:hover {
+      transform: none;
+    }
+  }
 `;
 
 const GameDayHeader = styled.div`
@@ -27,12 +33,18 @@ const GameDayHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: ${({ theme }) => theme.spacing.sm};
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
 const GameDayTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin: 0;
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 `;
 
 const GameDayDate = styled.div`
@@ -46,6 +58,25 @@ const GameDayStats = styled.div`
   gap: ${({ theme }) => theme.spacing.md};
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text.secondary};
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    gap: ${({ theme }) => theme.spacing.sm};
+  }
+`;
+
+const PageHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 export const GameDaysList: React.FC = () => {
@@ -60,32 +91,34 @@ export const GameDaysList: React.FC = () => {
     navigate(`/game-day/${id}`);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.confirm('Ви впевнені, що хочете видалити цей ігровий день?')) {
-      deleteGameDay(id);
+      await deleteGameDay(id);
     }
   };
 
-  const handleSetActive = (e: React.MouseEvent, id: string) => {
+  const handleSetActive = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setActiveGameDay(id);
+    await setActiveGameDay(id);
   };
 
   return (
     <Container>
-      <Flex $justify="space-between" $align="center">
-        <Title>Ігрові дні</Title>
+      <PageHeader>
+        <Title style={{ margin: 0 }}>Ігрові дні</Title>
         <Button onClick={() => navigate('/game-day/new')}>
-          + Створити ігровий день
+          + Створити
         </Button>
-      </Flex>
+      </PageHeader>
 
       {sortedGameDays.length === 0 ? (
-        <EmptyState>
-          <p>Ще немає ігрових днів</p>
-          <p>Створіть перший ігровий день, щоб почати!</p>
-        </EmptyState>
+        <Card>
+          <EmptyState>
+            <p>Ще немає ігрових днів</p>
+            <p>Створіть перший ігровий день, щоб почати!</p>
+          </EmptyState>
+        </Card>
       ) : (
         sortedGameDays.map(gameDay => (
           <GameDayCard key={gameDay.id} onClick={() => handleGameDayClick(gameDay.id)}>
@@ -98,10 +131,10 @@ export const GameDaysList: React.FC = () => {
               <span>Матчів: {gameDay.matches.length}</span>
               <span>Гравців: {gameDay.playerTeamAssignments.length}</span>
             </GameDayStats>
-            <Flex $gap="8px" style={{ marginTop: '16px' }}>
+            <ButtonGroup style={{ marginTop: '16px' }}>
               {!gameDay.isActive && (
                 <Button onClick={e => handleSetActive(e, gameDay.id)}>
-                  Зробити активним
+                  Активувати
                 </Button>
               )}
               <Button
@@ -116,11 +149,10 @@ export const GameDaysList: React.FC = () => {
               <Button $variant="danger" onClick={e => handleDelete(e, gameDay.id)}>
                 Видалити
               </Button>
-            </Flex>
+            </ButtonGroup>
           </GameDayCard>
         ))
       )}
     </Container>
   );
 };
-
