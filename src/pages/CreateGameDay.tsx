@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import {
   Container,
@@ -50,9 +50,19 @@ const NoPlayers = styled.p`
   margin-bottom: 8px;
 `;
 
+const InfoText = styled.p`
+  color: #666;
+  font-size: 13px;
+  margin-top: 4px;
+`;
+
 export const CreateGameDay: React.FC = () => {
-  const { players, teams, addGameDay } = useApp();
+  const { id } = useParams<{ id: string }>();
+  const { players, teams, addGameDay, updateGameDay, getGameDay } = useApp();
   const navigate = useNavigate();
+
+  const isEditMode = !!id;
+  const existingGameDay = id ? getGameDay(id) : undefined;
 
   const [name, setName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -60,13 +70,37 @@ export const CreateGameDay: React.FC = () => {
     { playerId: string; teamId: string }[]
   >([]);
 
-  const handleAddPlayer = () => {
-    if (players.length > 0 && teams.length > 0) {
-      setPlayerAssignments([
-        ...playerAssignments,
-        { playerId: players[0].id, teamId: teams[0].id },
-      ]);
+  // Load existing data in edit mode
+  useEffect(() => {
+    if (isEditMode && existingGameDay) {
+      setName(existingGameDay.name);
+      setDate(existingGameDay.date);
+      setPlayerAssignments(
+        existingGameDay.playerTeamAssignments.map(pa => ({
+          playerId: pa.playerId,
+          teamId: pa.teamId,
+        }))
+      );
     }
+  }, [isEditMode, existingGameDay]);
+
+  // Get list of player IDs that are already assigned
+  const assignedPlayerIds = new Set(playerAssignments.map(pa => pa.playerId));
+
+  const handleAddPlayer = () => {
+    if (teams.length === 0) return;
+    
+    // Find first available player
+    const availablePlayer = players.find(p => !assignedPlayerIds.has(p.id));
+    if (!availablePlayer) {
+      alert('Всі гравці вже додані');
+      return;
+    }
+
+    setPlayerAssignments([
+      ...playerAssignments,
+      { playerId: availablePlayer.id, teamId: teams[0].id },
+    ]);
   };
 
   const handleRemovePlayer = (index: number) => {
@@ -74,6 +108,16 @@ export const CreateGameDay: React.FC = () => {
   };
 
   const handlePlayerChange = (index: number, playerId: string) => {
+    // Check if player is already assigned elsewhere
+    const isAlreadyAssigned = playerAssignments.some(
+      (pa, i) => i !== index && pa.playerId === playerId
+    );
+    
+    if (isAlreadyAssigned) {
+      alert('Цей гравець вже доданий до іншої команди');
+      return;
+    }
+
     const updated = [...playerAssignments];
     updated[index].playerId = playerId;
     setPlayerAssignments(updated);
@@ -93,18 +137,31 @@ export const CreateGameDay: React.FC = () => {
       return;
     }
 
-    const gameDay = await addGameDay({
-      name: name.trim(),
-      date,
-      playerTeamAssignments: playerAssignments.map(pa => ({
-        playerId: pa.playerId,
-        teamId: pa.teamId,
-      })),
-      matches: [],
-      isActive: false,
-    });
-
-    navigate(`/game-day/${gameDay.id}`);
+    if (isEditMode && id) {
+      // Update existing game day
+      await updateGameDay(id, {
+        name: name.trim(),
+        date,
+        playerTeamAssignments: playerAssignments.map(pa => ({
+          playerId: pa.playerId,
+          teamId: pa.teamId,
+        })),
+      });
+      navigate(`/game-day/${id}`);
+    } else {
+      // Create new game day
+      const gameDay = await addGameDay({
+        name: name.trim(),
+        date,
+        playerTeamAssignments: playerAssignments.map(pa => ({
+          playerId: pa.playerId,
+          teamId: pa.teamId,
+        })),
+        matches: [],
+        isActive: false,
+      });
+      navigate(`/game-day/${gameDay.id}`);
+    }
   };
 
   const playersByTeam = teams.map(team => ({
@@ -114,9 +171,11 @@ export const CreateGameDay: React.FC = () => {
       .filter(pa => pa.teamId === team.id),
   }));
 
+  const availablePlayersCount = players.length - assignedPlayerIds.size;
+
   return (
     <Container>
-      <Title>Створити ігровий день</Title>
+      <Title>{isEditMode ? 'Редагувати ігровий день' : 'Створити ігровий день'}</Title>
 
       <Card>
         <form onSubmit={handleSubmit}>
@@ -141,8 +200,17 @@ export const CreateGameDay: React.FC = () => {
 
           <FormGroup>
             <MobileStack>
-              <Label style={{ margin: 0, flex: 1 }}>Гравці та команди</Label>
-              <Button type="button" onClick={handleAddPlayer}>
+              <div style={{ flex: 1 }}>
+                <Label style={{ margin: 0 }}>Гравці та команди</Label>
+                <InfoText>
+                  Додано: {playerAssignments.length} / {players.length} гравців
+                </InfoText>
+              </div>
+              <Button 
+                type="button" 
+                onClick={handleAddPlayer}
+                disabled={availablePlayersCount === 0}
+              >
                 + Гравець
               </Button>
             </MobileStack>
@@ -169,11 +237,20 @@ export const CreateGameDay: React.FC = () => {
                       onChange={e => handlePlayerChange(pa.index, e.target.value)}
                       style={{ flex: 2 }}
                     >
-                      {players.map(player => (
-                        <option key={player.id} value={player.id}>
-                          {player.name}
-                        </option>
-                      ))}
+                      {players.map(player => {
+                        const isAssignedElsewhere = 
+                          assignedPlayerIds.has(player.id) && 
+                          player.id !== pa.playerId;
+                        return (
+                          <option 
+                            key={player.id} 
+                            value={player.id}
+                            disabled={isAssignedElsewhere}
+                          >
+                            {player.name}{isAssignedElsewhere ? ' (вже додано)' : ''}
+                          </option>
+                        );
+                      })}
                     </Select>
                     <Select
                       value={pa.teamId}
@@ -200,11 +277,11 @@ export const CreateGameDay: React.FC = () => {
           ))}
 
           <ButtonGroup style={{ marginTop: '24px' }}>
-            <Button type="submit">Створити</Button>
+            <Button type="submit">{isEditMode ? 'Зберегти' : 'Створити'}</Button>
             <Button
               type="button"
               $variant="secondary"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(isEditMode ? `/game-day/${id}` : '/')}
             >
               Скасувати
             </Button>

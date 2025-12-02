@@ -120,6 +120,14 @@ export const GameDaysList: React.FC = () => {
               <span>Гравців: {gameDay.playerTeamAssignments.length}</span>
             </GameDayStats>
             <ButtonGroup style={{ marginTop: '16px' }}>
+              <Button
+                onClick={e => {
+                  e.stopPropagation();
+                  navigate(`/game-day/${gameDay.id}/edit`);
+                }}
+              >
+                Редагувати
+              </Button>
               <Button $variant="danger" onClick={e => handleDelete(e, gameDay.id)}>
                 Видалити
               </Button>
