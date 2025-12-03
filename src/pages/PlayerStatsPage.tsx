@@ -12,8 +12,6 @@ import {
   Badge,
   TableWrapper,
   PageHeader,
-  Button,
-  ButtonGroup,
 } from '@/components/UI';
 import styled, { keyframes, css } from 'styled-components';
 
@@ -244,15 +242,15 @@ const CoefficientBadge = styled.span<{ $value: number }>`
   font-weight: 700;
   font-family: ${({ theme }) => theme.typography.heading};
   
-  background: ${({ $value, theme }) => {
+  background: ${({ $value }) => {
     if ($value >= 1) return 'rgba(34, 197, 94, 0.2)';
     if ($value >= 0.5) return 'rgba(59, 130, 246, 0.2)';
     return 'rgba(100, 116, 139, 0.2)';
   }};
-  color: ${({ $value, theme }) => {
-    if ($value >= 1) return theme.colors.primary;
-    if ($value >= 0.5) return theme.colors.info;
-    return theme.colors.text.secondary;
+  color: ${({ $value }) => {
+    if ($value >= 1) return '#22c55e';
+    if ($value >= 0.5) return '#3b82f6';
+    return '#94a3b8';
   }};
 `;
 

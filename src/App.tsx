@@ -66,15 +66,15 @@ const ConnectionStatus = styled.div<{ $connected: boolean }>`
   transition: all ${({ theme }) => theme.transitions.normal};
   cursor: default;
   
-  background: ${({ $connected, theme }) => 
+  background: ${({ $connected }) => 
     $connected 
       ? 'rgba(34, 197, 94, 0.15)' 
       : 'rgba(245, 158, 11, 0.15)'};
-  color: ${({ $connected, theme }) => 
+  color: ${({ $connected }) => 
     $connected 
-      ? theme.colors.primary 
-      : theme.colors.warning};
-  border: 1px solid ${({ $connected, theme }) => 
+      ? '#22c55e' 
+      : '#f59e0b'};
+  border: 1px solid ${({ $connected }) => 
     $connected 
       ? 'rgba(34, 197, 94, 0.3)' 
       : 'rgba(245, 158, 11, 0.3)'};
@@ -94,14 +94,14 @@ const StatusDot = styled.span<{ $connected: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${({ $connected, theme }) => 
+  background: ${({ $connected }) => 
     $connected 
-      ? theme.colors.primary 
-      : theme.colors.warning};
-  box-shadow: ${({ $connected, theme }) => 
+      ? '#22c55e' 
+      : '#f59e0b'};
+  box-shadow: ${({ $connected }) => 
     $connected 
-      ? `0 0 8px ${theme.colors.primary}` 
-      : `0 0 8px ${theme.colors.warning}`};
+      ? '0 0 8px #22c55e' 
+      : '0 0 8px #f59e0b'};
   animation: ${pulse} 2s ease-in-out infinite;
 `;
 

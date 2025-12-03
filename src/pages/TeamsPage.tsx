@@ -14,8 +14,6 @@ import {
   Td,
   Tr,
   EmptyState,
-  Badge,
-  MobileStack,
   ButtonGroup,
   TableWrapper,
   PageHeader,
@@ -128,7 +126,7 @@ const ColorPresetButton = styled.button<{ $color: string; $isSelected: boolean }
   height: 32px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
   background: ${({ $color }) => $color};
-  border: 3px solid ${({ $isSelected, theme }) => 
+  border: 3px solid ${({ $isSelected }) => 
     $isSelected ? 'white' : 'transparent'};
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.fast};

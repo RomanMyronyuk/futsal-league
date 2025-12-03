@@ -7,7 +7,6 @@ import {
   Subtitle,
   Card,
   Button,
-  EmptyState,
   ButtonGroup,
   PageHeader,
 } from '@/components/UI';
@@ -283,16 +282,6 @@ const SectionTitle = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: ${({ theme }) => theme.spacing.md};
-`;
-
-const ViewAllLink = styled.span`
-  font-size: 13px;
-  color: ${({ theme }) => theme.colors.primary};
-  cursor: pointer;
-  
-  &:hover {
-    text-decoration: underline;
-  }
 `;
 
 // Extended match type with game day info
