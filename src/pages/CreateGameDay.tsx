@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Container,
   Title,
@@ -131,10 +132,18 @@ const FormCard = styled(Card)`
 export const CreateGameDay: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { players, teams, addGameDay, updateGameDay, getGameDay } = useApp();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const isEditMode = !!id;
   const existingGameDay = id ? getGameDay(id) : undefined;
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Form state
   const [name, setName] = useState('');

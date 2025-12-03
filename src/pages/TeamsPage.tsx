@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Container,
   Title,
@@ -155,6 +156,7 @@ const PRESET_COLORS = [
 
 export const TeamsPage: React.FC = () => {
   const { teams, addTeam, updateTeam, deleteTeam } = useApp();
+  const { isAuthenticated } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState('#3b82f6');
@@ -205,9 +207,11 @@ export const TeamsPage: React.FC = () => {
           <Title style={{ margin: 0 }}>Команди</Title>
           <TeamCount>{teams.length}</TeamCount>
         </div>
-        <Button onClick={() => setShowAdd(!showAdd)}>
-          {showAdd ? 'Скасувати' : '+ Додати команду'}
-        </Button>
+        {isAuthenticated && (
+          <Button onClick={() => setShowAdd(!showAdd)}>
+            {showAdd ? 'Скасувати' : '+ Додати команду'}
+          </Button>
+        )}
       </PageHeader>
 
       {showAdd && (
@@ -269,7 +273,7 @@ export const TeamsPage: React.FC = () => {
                 <tr>
                   <Th style={{ width: '50px' }}>#</Th>
                   <Th>Команда</Th>
-                  <Th style={{ width: '150px', textAlign: 'right' }}>Дії</Th>
+                  {isAuthenticated && <Th style={{ width: '150px', textAlign: 'right' }}>Дії</Th>}
                 </tr>
               </thead>
               <tbody>
@@ -298,41 +302,43 @@ export const TeamsPage: React.FC = () => {
                         <TeamBadge $color={team.color}>{team.name}</TeamBadge>
                       )}
                     </Td>
-                    <Td style={{ textAlign: 'right' }}>
-                      <ButtonGroup style={{ justifyContent: 'flex-end' }}>
-                        {editingId === team.id ? (
-                          <>
-                            <Button $size="sm" onClick={() => handleSaveEdit(team.id)}>
-                              ✓ Зберегти
-                            </Button>
-                            <Button
-                              $variant="ghost"
-                              $size="sm"
-                              onClick={() => setEditingId(null)}
-                            >
-                              ✕
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              $variant="secondary"
-                              $size="sm"
-                              onClick={() => handleEdit(team.id, team.name, team.color)}
-                            >
-                              ✎
-                            </Button>
-                            <Button
-                              $variant="danger"
-                              $size="sm"
-                              onClick={() => handleDelete(team.id)}
-                            >
-                              ✕
-                            </Button>
-                          </>
-                        )}
-                      </ButtonGroup>
-                    </Td>
+                    {isAuthenticated && (
+                      <Td style={{ textAlign: 'right' }}>
+                        <ButtonGroup style={{ justifyContent: 'flex-end' }}>
+                          {editingId === team.id ? (
+                            <>
+                              <Button $size="sm" onClick={() => handleSaveEdit(team.id)}>
+                                ✓ Зберегти
+                              </Button>
+                              <Button
+                                $variant="ghost"
+                                $size="sm"
+                                onClick={() => setEditingId(null)}
+                              >
+                                ✕
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                $variant="secondary"
+                                $size="sm"
+                                onClick={() => handleEdit(team.id, team.name, team.color)}
+                              >
+                                ✎
+                              </Button>
+                              <Button
+                                $variant="danger"
+                                $size="sm"
+                                onClick={() => handleDelete(team.id)}
+                              >
+                                ✕
+                              </Button>
+                            </>
+                          )}
+                        </ButtonGroup>
+                      </Td>
+                    )}
                   </Tr>
                 ))}
               </tbody>

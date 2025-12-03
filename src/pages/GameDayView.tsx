@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Container,
   Title,
@@ -347,6 +348,7 @@ interface PlayerGoalInput {
 export const GameDayView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     getGameDay,
     teams,
@@ -647,9 +649,11 @@ export const GameDayView: React.FC = () => {
           </DateBadge>
         </div>
         <HeaderActions>
-          <Button $variant="secondary" onClick={() => setShowTransfer(true)}>
-            🔄 Трансфер
-          </Button>
+          {isAuthenticated && (
+            <Button $variant="secondary" onClick={() => setShowTransfer(true)}>
+              🔄 Трансфер
+            </Button>
+          )}
           <Button $variant="ghost" onClick={() => navigate('/')}>
             ← Назад
           </Button>
@@ -712,13 +716,13 @@ export const GameDayView: React.FC = () => {
       <Card>
         <MobileStack style={{ marginBottom: '20px' }}>
           <Subtitle style={{ margin: 0, flex: 1 }}>⚽ Матчі</Subtitle>
-          {!showAddMatch && (
+          {isAuthenticated && !showAddMatch && (
             <Button onClick={() => setShowAddMatch(true)}>+ Додати матч</Button>
           )}
         </MobileStack>
 
         {/* Add/Edit Match Form */}
-        {showAddMatch && (
+        {isAuthenticated && showAddMatch && (
           <FormCard>
             <Subtitle style={{ fontSize: '16px', marginBottom: '20px' }}>
               {editingMatchId ? '✏️ Редагування матчу' : '🆕 Новий матч'}
@@ -890,27 +894,29 @@ export const GameDayView: React.FC = () => {
                     {getTeamName(match.team2Id)}
                   </TeamBadge>
                 </MatchTeams>
-                <ButtonGroup>
-                  <Button
-                    $variant="secondary"
-                    $size="sm"
-                    onClick={() => handleEditMatch(match)}
-                    disabled={editingMatchId === match.id}
-                  >
-                    ✎ Редагувати
-                  </Button>
-                  <Button
-                    $variant="danger"
-                    $size="sm"
-                    onClick={async () => {
-                      if (window.confirm('Видалити цей матч?')) {
-                        await deleteMatch(gameDay.id, match.id);
-                      }
-                    }}
-                  >
-                    ✕
-                  </Button>
-                </ButtonGroup>
+                {isAuthenticated && (
+                  <ButtonGroup>
+                    <Button
+                      $variant="secondary"
+                      $size="sm"
+                      onClick={() => handleEditMatch(match)}
+                      disabled={editingMatchId === match.id}
+                    >
+                      ✎ Редагувати
+                    </Button>
+                    <Button
+                      $variant="danger"
+                      $size="sm"
+                      onClick={async () => {
+                        if (window.confirm('Видалити цей матч?')) {
+                          await deleteMatch(gameDay.id, match.id);
+                        }
+                      }}
+                    >
+                      ✕
+                    </Button>
+                  </ButtonGroup>
+                )}
               </MatchContent>
 
               {match.goals.length > 0 && (
@@ -931,7 +937,7 @@ export const GameDayView: React.FC = () => {
       </Card>
 
       {/* Transfer Modal */}
-      {showTransfer && (
+      {isAuthenticated && showTransfer && (
         <Modal onClick={() => setShowTransfer(false)}>
           <ModalContent onClick={e => e.stopPropagation()}>
             <Subtitle>🔄 Трансфер гравця</Subtitle>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   Container,
   Title,
@@ -292,6 +293,7 @@ interface MatchWithGameDay extends Match {
 
 export const GameDaysList: React.FC = () => {
   const { gameDays, teams, deleteGameDay } = useApp();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Sort game days by date, newest first
@@ -344,9 +346,11 @@ export const GameDaysList: React.FC = () => {
     <Container>
       <PageHeader>
         <Title style={{ margin: 0 }}>Ігрові дні</Title>
-        <Button onClick={() => navigate('/game-day/new')}>
-          + Створити
-        </Button>
+        {isAuthenticated && (
+          <Button onClick={() => navigate('/game-day/new')}>
+            + Створити
+          </Button>
+        )}
       </PageHeader>
 
       {/* Recent matches section */}
@@ -391,12 +395,15 @@ export const GameDaysList: React.FC = () => {
             <HeroIcon>⚽</HeroIcon>
             <h2>Ласкаво просимо!</h2>
             <p>
-              Ще немає ігрових днів. Створіть перший ігровий день, 
-              щоб почати відстежувати матчі та статистику.
+              {isAuthenticated 
+                ? 'Ще немає ігрових днів. Створіть перший ігровий день, щоб почати відстежувати матчі та статистику.'
+                : 'Ще немає ігрових днів. Увійдіть, щоб створювати та редагувати дані.'}
             </p>
-            <Button onClick={() => navigate('/game-day/new')} $size="lg">
-              + Створити перший ігровий день
-            </Button>
+            {isAuthenticated && (
+              <Button onClick={() => navigate('/game-day/new')} $size="lg">
+                + Створити перший ігровий день
+              </Button>
+            )}
           </HeroSection>
         </Card>
       ) : (
@@ -434,6 +441,7 @@ export const GameDaysList: React.FC = () => {
                 </StatItem>
               </GameDayStats>
               
+            {isAuthenticated && (
               <CardActions>
                 <ButtonGroup>
                   <Button
@@ -450,6 +458,7 @@ export const GameDaysList: React.FC = () => {
                   </Button>
                 </ButtonGroup>
               </CardActions>
+            )}
             </GameDayCard>
           ))}
         </>

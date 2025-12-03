@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCfPO-haIfxOPeLZEcuTRwpAxDWWOflOsc",
   authDomain: "futsal-league-67ce9.firebaseapp.com",
