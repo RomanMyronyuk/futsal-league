@@ -617,23 +617,63 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         totalMatches: 0,
         gameDaysPlayed: 0,
         goalsByTeam: {},
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        teamGoalsFor: 0,
+        teamGoalsAgainst: 0,
+        goalsPerMatch: 0,
+        goalsPerGameDay: 0,
+        winRate: 0,
+        points: 0,
+        pointsPerMatch: 0,
+        goalDifference: 0,
+        cleanSheets: 0,
       });
     });
 
     // Calculate stats from all game days
     gameDays.forEach(gameDay => {
-      // Track which players participated in this game day and their matches
-      const playerMatchCount = new Map<string, number>();
+      // Track which players participated in this game day
+      const playerParticipated = new Set<string>();
 
       gameDay.matches.forEach(match => {
         // For each match, find which players were in each team at the time of the match
         gameDay.playerTeamAssignments.forEach(assignment => {
           const playerTeam = getPlayerTeamAtTime(gameDay, assignment.playerId, match.timestamp);
+          const playerStats = statsMap.get(assignment.playerId);
+          
+          if (!playerStats) return;
 
           // Check if player was in one of the teams playing this match
           if (playerTeam === match.team1Id || playerTeam === match.team2Id) {
-            const currentCount = playerMatchCount.get(assignment.playerId) || 0;
-            playerMatchCount.set(assignment.playerId, currentCount + 1);
+            playerParticipated.add(assignment.playerId);
+            playerStats.totalMatches++;
+            
+            // Determine if player's team won, lost, or drew
+            const isTeam1 = playerTeam === match.team1Id;
+            const playerTeamGoals = isTeam1 ? match.score1 : match.score2;
+            const opponentGoals = isTeam1 ? match.score2 : match.score1;
+            
+            // Team goals tracking
+            playerStats.teamGoalsFor += playerTeamGoals;
+            playerStats.teamGoalsAgainst += opponentGoals;
+            
+            // Clean sheet (no goals conceded)
+            if (opponentGoals === 0) {
+              playerStats.cleanSheets++;
+            }
+            
+            // Win/Draw/Loss
+            if (playerTeamGoals > opponentGoals) {
+              playerStats.wins++;
+              playerStats.points += 3;
+            } else if (playerTeamGoals < opponentGoals) {
+              playerStats.losses++;
+            } else {
+              playerStats.draws++;
+              playerStats.points += 1;
+            }
           }
         });
 
@@ -651,19 +691,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         });
       });
 
-      // Update match counts and game day participation
-      playerMatchCount.forEach((matchCount, playerId) => {
+      // Update game day participation count
+      playerParticipated.forEach(playerId => {
         const playerStats = statsMap.get(playerId);
-        if (playerStats && matchCount > 0) {
-          playerStats.totalMatches += matchCount;
+        if (playerStats) {
           playerStats.gameDaysPlayed++;
         }
       });
     });
 
-    // Sort by total goals, then by matches played
+    // Calculate derived statistics
+    statsMap.forEach(stats => {
+      // Goals per match
+      stats.goalsPerMatch = stats.totalMatches > 0 
+        ? Math.round((stats.totalGoals / stats.totalMatches) * 100) / 100 
+        : 0;
+      
+      // Goals per game day
+      stats.goalsPerGameDay = stats.gameDaysPlayed > 0 
+        ? Math.round((stats.totalGoals / stats.gameDaysPlayed) * 100) / 100 
+        : 0;
+      
+      // Win rate percentage
+      stats.winRate = stats.totalMatches > 0 
+        ? Math.round((stats.wins / stats.totalMatches) * 100) 
+        : 0;
+      
+      // Points per match
+      stats.pointsPerMatch = stats.totalMatches > 0 
+        ? Math.round((stats.points / stats.totalMatches) * 100) / 100 
+        : 0;
+      
+      // Goal difference
+      stats.goalDifference = stats.teamGoalsFor - stats.teamGoalsAgainst;
+    });
+
+    // Sort by total goals, then by win rate, then by matches played
     return Array.from(statsMap.values()).sort((a, b) => {
       if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
       return b.totalMatches - a.totalMatches;
     });
   };

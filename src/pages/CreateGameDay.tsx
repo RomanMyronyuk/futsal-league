@@ -12,48 +12,120 @@ import {
   Select,
   MobileStack,
   ButtonGroup,
+  PageHeader,
 } from '@/components/UI';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
+// Animation for player cards
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+`;
+
+// Player assignment row
 const PlayerAssignment = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  padding: 8px;
-  background: ${({ theme }) => theme.colors.background};
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  margin-bottom: 8px;
+  padding: 12px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-bottom: 10px;
+  animation: ${slideIn} 0.2s ease;
+  transition: all ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.borderLight};
+    background: ${({ theme }) => theme.colors.surfaceHover};
+  }
 
   @media (max-width: 480px) {
     flex-wrap: wrap;
+    gap: 8px;
   }
 `;
 
+// Team section container
 const TeamSection = styled.div`
-  margin-top: ${({ theme }) => theme.spacing.lg};
+  margin-top: ${({ theme }) => theme.spacing.xl};
 `;
 
+// Team header badge
 const TeamHeader = styled.div<{ $color: string }>`
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: 10px 16px;
   background: ${({ $color }) => $color};
   color: white;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  box-shadow: 0 2px 8px ${({ $color }) => `${$color}50`};
+  font-family: ${({ theme }) => theme.typography.heading};
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+`;
+
+// Player count in header
+const PlayerCountBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-size: 13px;
   font-weight: 600;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  margin-bottom: 8px;
-  font-size: 14px;
 `;
 
+// No players message
 const NoPlayers = styled.p`
-  color: #999;
+  color: ${({ theme }) => theme.colors.text.disabled};
   font-size: 14px;
-  margin-left: 8px;
-  margin-bottom: 8px;
+  padding: ${({ theme }) => theme.spacing.md};
+  text-align: center;
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
 `;
 
+// Info text below labels
 const InfoText = styled.p`
-  color: #666;
+  color: ${({ theme }) => theme.colors.text.secondary};
   font-size: 13px;
   margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+// Progress indicator
+const ProgressBar = styled.div<{ $percentage: number }>`
+  height: 4px;
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: ${({ $percentage }) => $percentage}%;
+    background: ${({ theme }) => theme.colors.gradients.primary};
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+`;
+
+// Form card
+const FormCard = styled(Card)`
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  border: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 export const CreateGameDay: React.FC = () => {
@@ -64,6 +136,7 @@ export const CreateGameDay: React.FC = () => {
   const isEditMode = !!id;
   const existingGameDay = id ? getGameDay(id) : undefined;
 
+  // Form state
   const [name, setName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [playerAssignments, setPlayerAssignments] = useState<
@@ -84,9 +157,10 @@ export const CreateGameDay: React.FC = () => {
     }
   }, [isEditMode, existingGameDay]);
 
-  // Get list of player IDs that are already assigned
+  // Track which players are already assigned
   const assignedPlayerIds = new Set(playerAssignments.map(pa => pa.playerId));
 
+  // Add a new player to assignments
   const handleAddPlayer = () => {
     if (teams.length === 0) return;
     
@@ -103,10 +177,12 @@ export const CreateGameDay: React.FC = () => {
     ]);
   };
 
+  // Remove player from assignments
   const handleRemovePlayer = (index: number) => {
     setPlayerAssignments(playerAssignments.filter((_, i) => i !== index));
   };
 
+  // Change player selection
   const handlePlayerChange = (index: number, playerId: string) => {
     // Check if player is already assigned elsewhere
     const isAlreadyAssigned = playerAssignments.some(
@@ -123,12 +199,14 @@ export const CreateGameDay: React.FC = () => {
     setPlayerAssignments(updated);
   };
 
+  // Change team for a player
   const handleTeamChange = (index: number, teamId: string) => {
     const updated = [...playerAssignments];
     updated[index].teamId = teamId;
     setPlayerAssignments(updated);
   };
 
+  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -164,6 +242,7 @@ export const CreateGameDay: React.FC = () => {
     }
   };
 
+  // Group players by team for display
   const playersByTeam = teams.map(team => ({
     team,
     players: playerAssignments
@@ -172,12 +251,19 @@ export const CreateGameDay: React.FC = () => {
   }));
 
   const availablePlayersCount = players.length - assignedPlayerIds.size;
+  const assignmentPercentage = players.length > 0 
+    ? (playerAssignments.length / players.length) * 100 
+    : 0;
 
   return (
     <Container>
-      <Title>{isEditMode ? 'Редагувати ігровий день' : 'Створити ігровий день'}</Title>
+      <PageHeader>
+        <Title style={{ margin: 0 }}>
+          {isEditMode ? '✏️ Редагувати ігровий день' : '🆕 Створити ігровий день'}
+        </Title>
+      </PageHeader>
 
-      <Card>
+      <FormCard>
         <form onSubmit={handleSubmit}>
           <FormGroup>
             <Label>Назва</Label>
@@ -186,6 +272,7 @@ export const CreateGameDay: React.FC = () => {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Наприклад: Гра 15 грудня"
+              autoFocus
             />
           </FormGroup>
 
@@ -201,34 +288,36 @@ export const CreateGameDay: React.FC = () => {
           <FormGroup>
             <MobileStack>
               <div style={{ flex: 1 }}>
-                <Label style={{ margin: 0 }}>Гравці та команди</Label>
+                <Label style={{ margin: 0 }}>👥 Гравці та команди</Label>
                 <InfoText>
-                  Додано: {playerAssignments.length} / {players.length} гравців
+                  Додано: {playerAssignments.length} з {players.length} гравців
                 </InfoText>
+                <ProgressBar $percentage={assignmentPercentage} />
               </div>
               <Button 
                 type="button" 
                 onClick={handleAddPlayer}
                 disabled={availablePlayersCount === 0}
               >
-                + Гравець
+                + Додати гравця
               </Button>
             </MobileStack>
           </FormGroup>
 
           {players.length === 0 && (
             <NoPlayers>
-              Спочатку додайте гравців у розділі "Гравці"
+              ⚠️ Спочатку додайте гравців у розділі "Гравці"
             </NoPlayers>
           )}
 
           {playersByTeam.map(({ team, players: teamPlayers }) => (
             <TeamSection key={team.id}>
               <TeamHeader $color={team.color}>
-                {team.name} ({teamPlayers.length})
+                {team.name}
+                <PlayerCountBadge>{teamPlayers.length}</PlayerCountBadge>
               </TeamHeader>
               {teamPlayers.length === 0 ? (
-                <NoPlayers>Немає гравців</NoPlayers>
+                <NoPlayers>Немає гравців у цій команді</NoPlayers>
               ) : (
                 teamPlayers.map(pa => (
                   <PlayerAssignment key={pa.index}>
@@ -266,6 +355,7 @@ export const CreateGameDay: React.FC = () => {
                     <Button
                       type="button"
                       $variant="danger"
+                      $size="sm"
                       onClick={() => handleRemovePlayer(pa.index)}
                     >
                       ✕
@@ -276,18 +366,20 @@ export const CreateGameDay: React.FC = () => {
             </TeamSection>
           ))}
 
-          <ButtonGroup style={{ marginTop: '24px' }}>
-            <Button type="submit">{isEditMode ? 'Зберегти' : 'Створити'}</Button>
+          <ButtonGroup style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--border, #2d3d4f)' }}>
+            <Button type="submit">
+              {isEditMode ? '✓ Зберегти зміни' : '+ Створити ігровий день'}
+            </Button>
             <Button
               type="button"
-              $variant="secondary"
+              $variant="ghost"
               onClick={() => navigate(isEditMode ? `/game-day/${id}` : '/')}
             >
               Скасувати
             </Button>
           </ButtonGroup>
         </form>
-      </Card>
+      </FormCard>
     </Container>
   );
 };

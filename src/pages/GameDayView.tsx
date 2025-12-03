@@ -19,112 +19,191 @@ import {
   TableWrapper,
   ButtonGroup,
   MobileStack,
+  PageHeader,
 } from '@/components/UI';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Goal, Match } from '@/types';
 
+// Animations
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const scoreReveal = keyframes`
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+// Team badge with color and shadow
 const TeamBadge = styled.div<{ $color: string }>`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
+  padding: 8px 16px;
   background: ${({ $color }) => $color};
   color: white;
-  border-radius: 4px;
-  font-weight: 600;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px ${({ $color }) => `${$color}50`};
+  font-family: ${({ theme }) => theme.typography.heading};
 
   @media (max-width: 480px) {
-    padding: 4px 8px;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 13px;
   }
 `;
 
+// Large score display
 const ScoreDisplay = styled.div`
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
   text-align: center;
-  min-width: 60px;
+  min-width: 80px;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.typography.heading};
+  letter-spacing: -0.02em;
+  animation: ${scoreReveal} 0.5s ease;
 
   @media (max-width: 480px) {
-    font-size: 20px;
-    min-width: 50px;
+    font-size: 24px;
+    min-width: 60px;
   }
 `;
 
-const MatchCard = styled(Card)`
-  background: ${({ theme }) => theme.colors.background};
+const ScoreSeparator = styled.span`
+  color: ${({ theme }) => theme.colors.text.disabled};
+  margin: 0 4px;
+`;
+
+// Match card with subtle styling
+const MatchCard = styled(Card)<{ $index?: number }>`
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  animation: ${fadeIn} 0.3s ease forwards;
+  animation-delay: ${({ $index }) => ($index || 0) * 0.05}s;
+  opacity: 0;
 `;
 
 const MatchNumber = styled.div`
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
   color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 8px;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1em;
+  
+  &::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: ${({ theme }) => theme.colors.primary};
+    border-radius: 50%;
+  }
 `;
 
 const MatchContent = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: ${({ theme }) => theme.spacing.lg};
 
   @media (max-width: 600px) {
     flex-direction: column;
-    gap: 12px;
+    gap: ${({ theme }) => theme.spacing.md};
   }
 `;
 
 const MatchTeams = styled.div`
   display: flex;
-  gap: 16px;
+  gap: ${({ theme }) => theme.spacing.md};
   align-items: center;
   flex: 1;
   justify-content: center;
 
   @media (max-width: 480px) {
-    gap: 8px;
+    gap: ${({ theme }) => theme.spacing.sm};
+    flex-wrap: wrap;
+    justify-content: center;
   }
 `;
 
+// Goals list under match
 const GoalsList = styled.div`
-  margin-top: ${({ theme }) => theme.spacing.sm};
+  margin-top: ${({ theme }) => theme.spacing.md};
+  padding-top: ${({ theme }) => theme.spacing.md};
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text.secondary};
+  
+  strong {
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
 
   @media (max-width: 480px) {
+    font-size: 13px;
+  }
+`;
+
+const GoalItem = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  
+  &::before {
+    content: '⚽';
     font-size: 12px;
   }
 `;
 
+// Form styling
+const FormCard = styled(Card)`
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  animation: ${fadeIn} 0.3s ease;
+`;
+
 const GoalInputRow = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 8px;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 12px;
+  background: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   flex-wrap: wrap;
 
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 10px;
   }
 `;
 
 const GoalCount = styled.input`
   width: 60px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   text-align: center;
   font-size: 16px;
+  font-weight: 600;
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  color: ${({ theme }) => theme.colors.text.primary};
   -webkit-appearance: none;
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
 
   @media (max-width: 480px) {
     width: 100%;
@@ -133,23 +212,42 @@ const GoalCount = styled.input`
 
 const ScoreInput = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 18px;
+  padding: 16px;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 24px;
+  font-weight: 700;
   text-align: center;
+  background: ${({ theme }) => theme.colors.backgroundSecondary};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.typography.heading};
   -webkit-appearance: none;
+  transition: all ${({ theme }) => theme.transitions.fast};
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primaryLight};
+  }
 `;
 
 const ValidationError = styled.div`
-  color: #f44336;
+  color: ${({ theme }) => theme.colors.error};
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  &::before {
+    content: '⚠️';
+    font-size: 12px;
+  }
 `;
 
 const HeaderActions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 10px;
 
   @media (max-width: 600px) {
     width: 100%;
@@ -157,30 +255,21 @@ const HeaderActions = styled.div`
   }
 `;
 
-const PageHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 24px;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-  }
-`;
-
+// Modal overlay
 const Modal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;
+  padding: ${({ theme }) => theme.spacing.md};
+  animation: ${fadeIn} 0.2s ease;
 `;
 
 const ModalContent = styled(Card)`
@@ -188,6 +277,7 @@ const ModalContent = styled(Card)`
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  animation: ${fadeIn} 0.3s ease;
 `;
 
 const GoalRowActions = styled.div`
@@ -199,6 +289,53 @@ const GoalRowActions = styled.div`
     width: 100%;
     justify-content: space-between;
   }
+`;
+
+// Date display
+const DateBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 14px;
+  
+  &::before {
+    content: '📅';
+  }
+`;
+
+// Standings table row highlighting
+const StandingsRow = styled(Tr)<{ $rank: number }>`
+  ${({ $rank, theme }) => $rank === 1 && `
+    background: ${theme.colors.primaryLight};
+    
+    td:first-child {
+      position: relative;
+      
+      &::before {
+        content: '👑';
+        position: absolute;
+        left: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+      }
+    }
+  `}
+`;
+
+const PointsBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  background: ${({ theme }) => theme.colors.gradients.primary};
+  color: white;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 `;
 
 interface PlayerGoalInput {
@@ -221,6 +358,7 @@ export const GameDayView: React.FC = () => {
     transferPlayer,
   } = useApp();
 
+  // Form state
   const [showAddMatch, setShowAddMatch] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
@@ -237,6 +375,7 @@ export const GameDayView: React.FC = () => {
 
   const gameDay = getGameDay(id || '');
 
+  // Set default teams when component loads
   useEffect(() => {
     if (teams.length >= 2 && !team1Id && !team2Id) {
       setTeam1Id(teams[0].id);
@@ -244,6 +383,7 @@ export const GameDayView: React.FC = () => {
     }
   }, [teams, team1Id, team2Id]);
 
+  // Prevent selecting same team for both sides
   useEffect(() => {
     if (team1Id && team1Id === team2Id) {
       const differentTeam = teams.find(t => t.id !== team1Id);
@@ -253,6 +393,7 @@ export const GameDayView: React.FC = () => {
     }
   }, [team1Id, team2Id, teams]);
 
+  // Auto-select "from team" for transfers
   useEffect(() => {
     if (transferPlayerId && gameDay) {
       const assignment = gameDay.playerTeamAssignments.find(
@@ -267,22 +408,30 @@ export const GameDayView: React.FC = () => {
     }
   }, [transferPlayerId, gameDay, transferToTeamId]);
 
+  // Show not found message if game day doesn't exist
   if (!gameDay) {
     return (
       <Container>
-        <Title>Ігровий день не знайдено</Title>
-        <Button onClick={() => navigate('/')}>Назад до списку</Button>
+        <Card $variant="glow">
+          <EmptyState>
+            <p>Ігровий день не знайдено</p>
+          </EmptyState>
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <Button onClick={() => navigate('/')}>← Назад до списку</Button>
+          </div>
+        </Card>
       </Container>
     );
   }
 
   const stats = getTeamDayStats(gameDay.id);
 
+  // Helper functions
   const getTeamName = (teamId: string) =>
     teams.find(t => t.id === teamId)?.name || '?';
 
   const getTeamColor = (teamId: string) =>
-    teams.find(t => t.id === teamId)?.color || '#999';
+    teams.find(t => t.id === teamId)?.color || '#64748b';
 
   const getPlayerName = (playerId: string) =>
     players.find(p => p.id === playerId)?.name || '?';
@@ -318,6 +467,7 @@ export const GameDayView: React.FC = () => {
       .reduce((sum, pg) => sum + parseGoals(pg.goals), 0);
   };
 
+  // Validation
   const score1 = parseScore(score1Input);
   const score2 = parseScore(score2Input);
   const team1PlayerGoals = getTotalPlayerGoalsForTeam(team1Id);
@@ -327,6 +477,7 @@ export const GameDayView: React.FC = () => {
   const team2GoalsExceeded = team2PlayerGoals > score2;
   const hasValidationErrors = team1GoalsExceeded || team2GoalsExceeded;
 
+  // Form handlers
   const handleAddPlayerGoal = (teamId: string) => {
     const teamPlayers = getPlayersForTeam(teamId);
     if (teamPlayers.length > 0) {
@@ -485,57 +636,71 @@ export const GameDayView: React.FC = () => {
     <Container>
       <PageHeader>
         <div>
-          <Title style={{ marginBottom: '4px' }}>{gameDay.name}</Title>
-          <p style={{ color: '#666', margin: 0 }}>
-            {new Date(gameDay.date).toLocaleDateString('uk-UA')}
-          </p>
+          <Title style={{ marginBottom: '8px' }}>{gameDay.name}</Title>
+          <DateBadge>
+            {new Date(gameDay.date).toLocaleDateString('uk-UA', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </DateBadge>
         </div>
         <HeaderActions>
-          <Button onClick={() => setShowTransfer(true)}>Трансфер</Button>
-          <Button $variant="secondary" onClick={() => navigate('/')}>Назад</Button>
+          <Button $variant="secondary" onClick={() => setShowTransfer(true)}>
+            🔄 Трансфер
+          </Button>
+          <Button $variant="ghost" onClick={() => navigate('/')}>
+            ← Назад
+          </Button>
         </HeaderActions>
       </PageHeader>
 
       {/* Standings Table */}
       <Card>
-        <Subtitle>Турнірна таблиця</Subtitle>
+        <Subtitle>🏆 Турнірна таблиця</Subtitle>
         {stats.length === 0 ? (
-          <EmptyState>Немає даних</EmptyState>
+          <EmptyState>
+            <p>Немає даних</p>
+            <p>Додайте матчі, щоб побачити таблицю</p>
+          </EmptyState>
         ) : (
           <TableWrapper>
             <Table>
               <thead>
                 <tr>
-                  <Th>#</Th>
+                  <Th style={{ width: '50px' }}>#</Th>
                   <Th>Команда</Th>
-                  <Th>І</Th>
-                  <Th>В</Th>
-                  <Th>Н</Th>
-                  <Th>П</Th>
-                  <Th>ЗГ</Th>
-                  <Th>ПГ</Th>
-                  <Th>РГ</Th>
-                  <Th>О</Th>
+                  <Th style={{ textAlign: 'center' }}>І</Th>
+                  <Th style={{ textAlign: 'center' }}>В</Th>
+                  <Th style={{ textAlign: 'center' }}>Н</Th>
+                  <Th style={{ textAlign: 'center' }}>П</Th>
+                  <Th style={{ textAlign: 'center' }}>ЗГ</Th>
+                  <Th style={{ textAlign: 'center' }}>ПГ</Th>
+                  <Th style={{ textAlign: 'center' }}>РГ</Th>
+                  <Th style={{ textAlign: 'center' }}>О</Th>
                 </tr>
               </thead>
               <tbody>
                 {stats.map((team, index) => (
-                  <Tr key={team.teamId}>
-                    <Td>{index + 1}</Td>
+                  <StandingsRow key={team.teamId} $rank={index + 1}>
+                    <Td style={{ fontWeight: 600 }}>{index + 1}</Td>
                     <Td>
                       <TeamBadge $color={team.teamColor}>{team.teamName}</TeamBadge>
                     </Td>
-                    <Td>{team.matchesPlayed}</Td>
-                    <Td>{team.wins}</Td>
-                    <Td>{team.draws}</Td>
-                    <Td>{team.losses}</Td>
-                    <Td>{team.goalsFor}</Td>
-                    <Td>{team.goalsAgainst}</Td>
-                    <Td>{team.goalDifference}</Td>
-                    <Td>
-                      <strong>{team.points}</strong>
+                    <Td style={{ textAlign: 'center' }}>{team.matchesPlayed}</Td>
+                    <Td style={{ textAlign: 'center', color: '#22c55e', fontWeight: 600 }}>{team.wins}</Td>
+                    <Td style={{ textAlign: 'center' }}>{team.draws}</Td>
+                    <Td style={{ textAlign: 'center', color: '#ef4444' }}>{team.losses}</Td>
+                    <Td style={{ textAlign: 'center' }}>{team.goalsFor}</Td>
+                    <Td style={{ textAlign: 'center' }}>{team.goalsAgainst}</Td>
+                    <Td style={{ textAlign: 'center', fontWeight: 600 }}>
+                      {team.goalDifference > 0 ? `+${team.goalDifference}` : team.goalDifference}
                     </Td>
-                  </Tr>
+                    <Td style={{ textAlign: 'center' }}>
+                      <PointsBadge>{team.points}</PointsBadge>
+                    </Td>
+                  </StandingsRow>
                 ))}
               </tbody>
             </Table>
@@ -543,22 +708,23 @@ export const GameDayView: React.FC = () => {
         )}
       </Card>
 
-      {/* Add/Edit Match Section */}
+      {/* Matches Section */}
       <Card>
-        <MobileStack style={{ marginBottom: '16px' }}>
-          <Subtitle style={{ margin: 0, flex: 1 }}>Матчі</Subtitle>
+        <MobileStack style={{ marginBottom: '20px' }}>
+          <Subtitle style={{ margin: 0, flex: 1 }}>⚽ Матчі</Subtitle>
           {!showAddMatch && (
             <Button onClick={() => setShowAddMatch(true)}>+ Додати матч</Button>
           )}
         </MobileStack>
 
+        {/* Add/Edit Match Form */}
         {showAddMatch && (
-          <Card style={{ background: '#f5f5f5' }}>
-            <Subtitle style={{ fontSize: '16px', marginBottom: '16px' }}>
-              {editingMatchId ? 'Редагування матчу' : 'Новий матч'}
+          <FormCard>
+            <Subtitle style={{ fontSize: '16px', marginBottom: '20px' }}>
+              {editingMatchId ? '✏️ Редагування матчу' : '🆕 Новий матч'}
             </Subtitle>
 
-            <MobileStack style={{ marginBottom: '16px' }}>
+            <MobileStack style={{ marginBottom: '20px' }}>
               <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Команда 1</Label>
                 <Select value={team1Id} onChange={e => setTeam1Id(e.target.value)}>
@@ -582,7 +748,7 @@ export const GameDayView: React.FC = () => {
               </FormGroup>
             </MobileStack>
 
-            <MobileStack style={{ marginBottom: '16px' }}>
+            <MobileStack style={{ marginBottom: '20px' }}>
               <FormGroup style={{ flex: 1, margin: 0 }}>
                 <Label>Рахунок {getTeamName(team1Id)}</Label>
                 <ScoreInput
@@ -603,7 +769,7 @@ export const GameDayView: React.FC = () => {
                 />
                 {team1GoalsExceeded && (
                   <ValidationError>
-                    Голів ({team1PlayerGoals}) &gt; рахунок ({score1})
+                    Голів ({team1PlayerGoals}) більше ніж рахунок ({score1})
                   </ValidationError>
                 )}
               </FormGroup>
@@ -628,7 +794,7 @@ export const GameDayView: React.FC = () => {
                 />
                 {team2GoalsExceeded && (
                   <ValidationError>
-                    Голів ({team2PlayerGoals}) &gt; рахунок ({score2})
+                    Голів ({team2PlayerGoals}) більше ніж рахунок ({score2})
                   </ValidationError>
                 )}
               </FormGroup>
@@ -637,10 +803,20 @@ export const GameDayView: React.FC = () => {
             <FormGroup>
               <Label>Голи гравців (необов'язково)</Label>
               <ButtonGroup>
-                <Button type="button" onClick={() => handleAddPlayerGoal(team1Id)}>
+                <Button 
+                  type="button" 
+                  $variant="secondary"
+                  $size="sm"
+                  onClick={() => handleAddPlayerGoal(team1Id)}
+                >
                   + {getTeamName(team1Id)}
                 </Button>
-                <Button type="button" onClick={() => handleAddPlayerGoal(team2Id)}>
+                <Button 
+                  type="button" 
+                  $variant="secondary"
+                  $size="sm"
+                  onClick={() => handleAddPlayerGoal(team2Id)}
+                >
                   + {getTeamName(team2Id)}
                 </Button>
               </ButtonGroup>
@@ -671,32 +847,34 @@ export const GameDayView: React.FC = () => {
                         handlePlayerGoalChange(index, 'goals', '0');
                       }
                     }}
-                    style={{ width: '50px' }}
                   />
-                  <Button $variant="danger" onClick={() => handleRemovePlayerGoal(index)}>
+                  <Button $variant="danger" $size="sm" onClick={() => handleRemovePlayerGoal(index)}>
                     ✕
                   </Button>
                 </GoalRowActions>
               </GoalInputRow>
             ))}
 
-            <ButtonGroup style={{ marginTop: '16px' }}>
+            <ButtonGroup style={{ marginTop: '20px' }}>
               <Button onClick={handleSaveMatch} disabled={hasValidationErrors}>
-                {editingMatchId ? 'Зберегти' : 'Додати'}
+                {editingMatchId ? '✓ Зберегти' : '+ Додати'}
               </Button>
-              <Button $variant="secondary" onClick={handleCancelEdit}>
+              <Button $variant="ghost" onClick={handleCancelEdit}>
                 Скасувати
               </Button>
             </ButtonGroup>
-          </Card>
+          </FormCard>
         )}
 
         {/* Matches List */}
         {gameDay.matches.length === 0 ? (
-          <EmptyState>Ще немає матчів</EmptyState>
+          <EmptyState>
+            <p>Ще немає матчів</p>
+            <p>Додайте перший матч, щоб почати</p>
+          </EmptyState>
         ) : (
           gameDay.matches.map((match, index) => (
-            <MatchCard key={match.id}>
+            <MatchCard key={match.id} $index={index}>
               <MatchNumber>Матч #{index + 1}</MatchNumber>
               <MatchContent>
                 <MatchTeams>
@@ -704,7 +882,9 @@ export const GameDayView: React.FC = () => {
                     {getTeamName(match.team1Id)}
                   </TeamBadge>
                   <ScoreDisplay>
-                    {match.score1} : {match.score2}
+                    {match.score1}
+                    <ScoreSeparator>:</ScoreSeparator>
+                    {match.score2}
                   </ScoreDisplay>
                   <TeamBadge $color={getTeamColor(match.team2Id)}>
                     {getTeamName(match.team2Id)}
@@ -712,33 +892,36 @@ export const GameDayView: React.FC = () => {
                 </MatchTeams>
                 <ButtonGroup>
                   <Button
+                    $variant="secondary"
+                    $size="sm"
                     onClick={() => handleEditMatch(match)}
                     disabled={editingMatchId === match.id}
                   >
-                    Редагувати
+                    ✎ Редагувати
                   </Button>
                   <Button
                     $variant="danger"
+                    $size="sm"
                     onClick={async () => {
                       if (window.confirm('Видалити цей матч?')) {
                         await deleteMatch(gameDay.id, match.id);
                       }
                     }}
                   >
-                    Видалити
+                    ✕
                   </Button>
                 </ButtonGroup>
               </MatchContent>
 
               {match.goals.length > 0 && (
                 <GoalsList>
-                  <strong>Голи:</strong>{' '}
+                  <strong>Голи: </strong>
                   {groupGoalsByPlayer(match.goals).map((goalInfo, idx, arr) => (
-                    <span key={idx}>
+                    <GoalItem key={idx}>
                       {getPlayerName(goalInfo.playerId)}
                       {goalInfo.count > 1 && ` ×${goalInfo.count}`}
                       {idx < arr.length - 1 && ', '}
-                    </span>
+                    </GoalItem>
                   ))}
                 </GoalsList>
               )}
@@ -751,7 +934,7 @@ export const GameDayView: React.FC = () => {
       {showTransfer && (
         <Modal onClick={() => setShowTransfer(false)}>
           <ModalContent onClick={e => e.stopPropagation()}>
-            <Subtitle>Трансфер гравця</Subtitle>
+            <Subtitle>🔄 Трансфер гравця</Subtitle>
 
             <FormGroup>
               <Label>Гравець</Label>
@@ -777,7 +960,7 @@ export const GameDayView: React.FC = () => {
               <Select
                 value={transferFromTeamId}
                 disabled={true}
-                style={{ background: '#f0f0f0' }}
+                style={{ opacity: 0.7 }}
               >
                 <option value="">
                   {transferFromTeamId
@@ -805,9 +988,9 @@ export const GameDayView: React.FC = () => {
 
             <ButtonGroup>
               <Button onClick={handleTransfer} disabled={!transferToTeamId}>
-                Трансфер
+                ✓ Трансфер
               </Button>
-              <Button $variant="secondary" onClick={() => setShowTransfer(false)}>
+              <Button $variant="ghost" onClick={() => setShowTransfer(false)}>
                 Скасувати
               </Button>
             </ButtonGroup>

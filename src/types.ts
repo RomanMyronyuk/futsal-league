@@ -68,11 +68,31 @@ export interface TeamDayStats {
 export interface PlayerStats {
   playerId: string;
   playerName: string;
+  
+  // Базові показники
   totalGoals: number;
   totalMatches: number;
   gameDaysPlayed: number;
   goalsByTeam: {
     [teamId: string]: number;
   };
+  
+  // Результати матчів
+  wins: number;
+  draws: number;
+  losses: number;
+  
+  // Командні показники (коли гравець на полі)
+  teamGoalsFor: number;      // Забито командою
+  teamGoalsAgainst: number;  // Пропущено командою
+  
+  // Розраховані коефіцієнти
+  goalsPerMatch: number;     // Голів за матч
+  goalsPerGameDay: number;   // Голів за ігровий день
+  winRate: number;           // % перемог
+  points: number;            // Очки (3 за перемогу, 1 за нічию)
+  pointsPerMatch: number;    // Очків за матч
+  goalDifference: number;    // Різниця голів команди
+  cleanSheets: number;       // Сухі матчі (0 пропущено)
 }
 
