@@ -96,3 +96,4 @@ export interface PlayerStats {
   cleanSheets: number;       // Сухі матчі (0 пропущено)
 }
 
+

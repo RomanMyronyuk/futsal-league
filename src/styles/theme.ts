@@ -187,3 +187,4 @@ declare module 'styled-components' {
     typography: typeof theme.typography;
   }
 }
+
